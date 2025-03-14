@@ -24,7 +24,7 @@
 int main(void) {
   first_run();
 
-  choose_class();
+  // choose_class();
 
   return 0;
 }

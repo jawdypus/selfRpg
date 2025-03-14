@@ -15,10 +15,13 @@
  *
  * =====================================================================================
  */
+#include <errno.h>
 #include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 int is_first_run(void) { return 1; }
@@ -64,4 +67,37 @@ void first_run(void) {
 
   printf("Enter vault path [%s]: ", DEFAULT_PATH);
   fgets(VAULTH_PATH, sizeof(VAULTH_PATH), stdin);
+
+  // Save vault and name to the config
+  char configDirectory[PATH_MAX];
+  sprintf(configDirectory, "/home/%s", DEFAULT_USERNAME);
+
+  printf("Home dir is: %s\n", configDirectory);
+
+  struct stat st = {0};
+  if (stat(configDirectory, &st) == -1) {
+    // Directory doesn't exist, so print an error message
+    perror("Parent directory does not exist");
+    return;
+  }
+
+  strcat(configDirectory, "/.config/");
+  if (stat(configDirectory, &st) == -1) {
+    // Directory doesn't exist, so create it
+    if (mkdir(configDirectory, 0700) == -1) {
+      perror("Error creating .config directory");
+      return;
+    }
+    printf("Created %s directory\n", configDirectory);
+  }
+
+  strcat(configDirectory, "selfRPG/");
+  if (stat(configDirectory, &st) == -1) {
+    // Directory doesn't exist, so create it
+    if (mkdir(configDirectory, 0700) == -1) {
+      perror("Error creating .config directory");
+      return;
+    }
+    printf("Created %s directory\n", configDirectory);
+  }
 }

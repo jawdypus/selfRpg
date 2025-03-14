@@ -20,6 +20,10 @@
 
 #include <unistd.h>
 
+typedef struct Character {
+  char Name[_SC_LOGIN_NAME_MAX];
+} Character;
+
 void choose_class(void);
 
 #endif
