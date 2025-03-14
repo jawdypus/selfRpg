@@ -22,8 +22,9 @@
 #include "core/ui/cli/message_renderer.h"
 
 const char *characters[] = {"assets/characters/warrior",
-                            "assets/characters/wizzard",
-                            "assets/characters/bard"};
+                            "assets/characters/wizard",
+                            "assets/characters/bard",
+                            "assets/characters/scout"};
 
 const int num_characters = sizeof(characters) / sizeof(characters[0]);
 
