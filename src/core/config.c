@@ -24,16 +24,90 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int is_first_run(void) { return 1; }
+int is_first_run(void) {
+  char *USERNAME;
+  USERNAME = getlogin();
+  if (USERNAME == NULL) {
+    perror("getlogin failed");
+  }
+
+  char configDirectory[PATH_MAX];
+  sprintf(configDirectory, "/home/%s/.config/selfRPG/config", USERNAME);
+
+  FILE *file;
+  file = fopen(configDirectory, "r");
+  if (file) {
+    printf("CONFIG EXISTS");
+    return 0;  // FALSE
+    fclose(file);
+  } else {
+    return 1;  // TRUE
+  }
+}
+
+int init_config(char HERO_NAME[_SC_LOGIN_NAME_MAX],
+                char VAULTH_PATH[PATH_MAX]) {
+  char *USERNAME;
+  USERNAME = getlogin();
+  if (USERNAME == NULL) {
+    perror("getlogin failed");
+  }
+
+  char configDirectory[PATH_MAX];
+  sprintf(configDirectory, "/home/%s", USERNAME);
+
+  struct stat st = {0};
+  if (stat(configDirectory, &st) == -1) {
+    // Directory doesn't exist, so print an error message
+    perror("Parent directory does not exist");
+    return 1;
+  }
+
+  strcat(configDirectory, "/.config/");
+  if (stat(configDirectory, &st) == -1) {
+    // Directory doesn't exist, so create it
+    if (mkdir(configDirectory, 0700) == -1) {
+      perror("Error creating .config directory");
+      return 1;
+    }
+  }
+
+  strcat(configDirectory, "selfRPG/");
+  if (stat(configDirectory, &st) == -1) {
+    // Directory doesn't exist, so create it
+    if (mkdir(configDirectory, 0700) == -1) {
+      perror("Error creating .config directory");
+      return 1;
+    }
+  }
+
+  char FILENAME[PATH_MAX];
+  char ITEM[256];
+
+  sprintf(FILENAME, "%sconfig", configDirectory);
+  sprintf(ITEM, "%s=%s", HERO_NAME, VAULTH_PATH);
+
+  FILE *fptr;
+
+  printf("%s", FILENAME);
+  // Create a file
+  fptr = fopen(FILENAME, "w");
+  fprintf(fptr, ITEM);
+
+  // Close the file
+  fclose(fptr);
+
+  return 0;
+}
 
 void first_run(void) {
-  if (!is_first_run()) {
+  if (is_first_run() == 0) {
     return;
   }
 
   char DEFAULT_PATH[PATH_MAX], DEFAULT_VAULT_NAME[_SC_LOGIN_NAME_MAX],
       *DEFAULT_USERNAME;
-  char VAULTH_PATH[PATH_MAX], USERNAME[_SC_LOGIN_NAME_MAX];
+  char VAULT_PATH[PATH_MAX], USERNAME[_SC_LOGIN_NAME_MAX];
 
   memset(DEFAULT_VAULT_NAME, 0, _SC_LOGIN_NAME_MAX);
 
@@ -66,38 +140,28 @@ void first_run(void) {
   strcat(DEFAULT_PATH, DEFAULT_VAULT_NAME);
 
   printf("Enter vault path [%s]: ", DEFAULT_PATH);
-  fgets(VAULTH_PATH, sizeof(VAULTH_PATH), stdin);
+  fgets(VAULT_PATH, sizeof(VAULT_PATH), stdin);
+  len = strlen(VAULT_PATH);
+  if (len > 0 && VAULT_PATH[len - 1] == '\n') {
+    VAULT_PATH[len - 1] = '\0';
+    len--;
+  }
 
-  // Save vault and name to the config
-  char configDirectory[PATH_MAX];
-  sprintf(configDirectory, "/home/%s", DEFAULT_USERNAME);
-
-  printf("Home dir is: %s\n", configDirectory);
+  if (len == 0) {
+    strcpy(VAULT_PATH, DEFAULT_PATH);
+  }
 
   struct stat st = {0};
-  if (stat(configDirectory, &st) == -1) {
-    // Directory doesn't exist, so print an error message
-    perror("Parent directory does not exist");
+  if (stat(VAULT_PATH, &st) == -1) {
+    // Directory doesn't exist, so create it
+    if (mkdir(VAULT_PATH, 0700) == -1) {
+      perror("Error creating vault directory");
+      return;
+    }
+  }
+
+  // Save vault and name to the config
+  if (init_config(USERNAME, VAULT_PATH)) {
     return;
-  }
-
-  strcat(configDirectory, "/.config/");
-  if (stat(configDirectory, &st) == -1) {
-    // Directory doesn't exist, so create it
-    if (mkdir(configDirectory, 0700) == -1) {
-      perror("Error creating .config directory");
-      return;
-    }
-    printf("Created %s directory\n", configDirectory);
-  }
-
-  strcat(configDirectory, "selfRPG/");
-  if (stat(configDirectory, &st) == -1) {
-    // Directory doesn't exist, so create it
-    if (mkdir(configDirectory, 0700) == -1) {
-      perror("Error creating .config directory");
-      return;
-    }
-    printf("Created %s directory\n", configDirectory);
   }
 }
