@@ -24,6 +24,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "core/vault.h"
+
 int is_first_run(void) {
   char *USERNAME;
   USERNAME = getlogin();
@@ -37,7 +39,6 @@ int is_first_run(void) {
   FILE *file;
   file = fopen(configDirectory, "r");
   if (file) {
-    printf("CONFIG EXISTS");
     return 0;  // FALSE
     fclose(file);
   } else {
@@ -89,8 +90,6 @@ int init_config(char HERO_NAME[_SC_LOGIN_NAME_MAX],
 
   FILE *fptr;
 
-  printf("%s", FILENAME);
-  // Create a file
   fptr = fopen(FILENAME, "w");
   fprintf(fptr, ITEM);
 
@@ -164,4 +163,6 @@ void first_run(void) {
   if (init_config(USERNAME, VAULT_PATH)) {
     return;
   }
+
+  generate_vault_files(VAULT_PATH);
 }
