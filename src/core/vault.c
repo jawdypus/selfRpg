@@ -45,7 +45,7 @@ static int readConfig(AppConfig* config) {
   }
 
   char configPath[PATH_MAX];
-  sprintf(configPath, "/home/%s/.config/selfRpg/config", USERNAME);
+  sprintf(configPath, "/home/%s/.config/selfRPG/config", USERNAME);
 
   FILE* fptr;
 
@@ -117,3 +117,111 @@ void generate_vault_files(char* VAULT_PATH) {
 
   fclose(fptr);
 }
+
+static int findVaultByName(const AppConfig* config, const char* vaultName) {
+  for (int i = 0; i < config->vaultCount; i++) {
+    if (strcmp(config->vaults[i].name, vaultName) == 0) {
+      return i;
+    }
+  }
+
+  return -1;  // Not found
+}
+
+static int determineActiveVault(AppConfig* config, int argc, char* argv[]) {
+  int activeVaultIndex = 0;
+
+  // Check for vault specified in command line args
+  for (int i = 1; i < argc; i++) {
+    // Check for -v or --vault flag
+    if ((strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--vault") == 0) &&
+        i + 1 < argc) {
+      int foundIndex = findVaultByName(config, argv[i + 1]);
+      if (foundIndex >= 0) {
+        activeVaultIndex = foundIndex;
+        break;
+      } else {
+        fprintf(stderr,
+                "Warning: Specified vault '%s' not found in config, using "
+                "default\n",
+                argv[i + 1]);
+      }
+      i++;  // Skip the next argument as it's the vault name
+    }
+  }
+
+  return activeVaultIndex;
+}
+
+static int validateVaultPath(const char* vaultPath) {
+  // Check if directory exists
+  if (access(vaultPath, F_OK) == -1) {
+    fprintf(stderr, "Error: Vault directory %s does not exist\n", vaultPath);
+    return 0;
+  }
+
+  // Check if character.txt exists in the vault
+  char characterPath[PATH_MAX];
+  snprintf(characterPath, PATH_MAX, "%s/character.txt", vaultPath);
+
+  if (access(characterPath, F_OK) == -1) {
+    fprintf(stderr, "Error: Character file %s does not exist\n", characterPath);
+    return 0;
+  }
+
+  return 1;
+}
+
+int initVault(int argc, char* argv[]) {
+  if (g_activeVault.isInitialized) {
+    return 1;
+  }
+
+  AppConfig config;
+
+  if (!readConfig(&config)) {
+    return 0;
+  }
+
+  int activeIndex = determineActiveVault(&config, argc, argv);
+
+  strncpy(g_activeVault.name, config.vaults[activeIndex].name,
+          _SC_LOGIN_NAME_MAX - 1);
+  g_activeVault.name[_SC_LOGIN_NAME_MAX - 1] = '\0';
+
+  strncpy(g_activeVault.path, config.vaults[activeIndex].path, PATH_MAX - 1);
+  g_activeVault.path[PATH_MAX - 1] = '\0';
+
+  // Validate the vault path
+  if (!validateVaultPath(g_activeVault.path)) {
+    return 0;
+  }
+
+  g_activeVault.isInitialized = 1;
+  return 1;
+}
+
+const char* getActiveVaultName(void) {
+  if (!g_activeVault.isInitialized) {
+    fprintf(stderr, "Error: Vault manager not initialized\n");
+    return "";
+  }
+
+  return g_activeVault.name;
+}
+
+// Get the active vault path
+const char* getActiveVaultPath(void) {
+  if (!g_activeVault.isInitialized) {
+    fprintf(stderr, "Error: Vault manager not initialized\n");
+    return "";
+  }
+  return g_activeVault.path;
+}
+
+// Check if the vault manager is initialized
+int isVaultInitialized(void) { return g_activeVault.isInitialized; }
+
+// Free resources used by vault manager - call this at program end
+void cleanupVault(void) { memset(&g_activeVault, 0, sizeof(ActiveVault)); }
+

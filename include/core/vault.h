@@ -30,7 +30,7 @@ typedef struct {
 int initVault(int argc, char* argv[]);
 const char* getActiveVaultName(void);
 const char* getActiveVaultPath(void);
-int isVaultManagerInitialized(void);
+int isVaultInitialized(void);
 void cleanupVault(void);
 
 void generate_vault_files(char* VAULT_PATH);
