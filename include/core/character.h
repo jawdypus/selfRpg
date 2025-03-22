@@ -20,10 +20,26 @@
 
 #include <unistd.h>
 
-typedef struct Character {
-  char Name[_SC_LOGIN_NAME_MAX];
+typedef enum { WARRIOR = 0, WIZARD = 1, BARD = 2, SCOUT = 3 } CharacterClasses;
+
+typedef struct {
+  CharacterClasses chClass;
+  char name[_SC_LOGIN_NAME_MAX];
+  int hp;
+  int strenght;
+  int perception;
+  int endurance;
+  int charisma;
+  int intelligence;
+  int agility;
+  int experience;
+  int level;
 } Character;
 
-void choose_class(void);
+void initPlayer(char *VAULT_PATH, char *HERO_NAME);
+int choose_class(void);
+void initCharacter(Character *character, CharacterClasses chClass,
+                   const char *name);
+void write_character_data(Character *character, char *VAULT_PATH);
 
 #endif

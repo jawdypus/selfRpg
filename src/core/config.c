@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "core/character.h"
 #include "core/vault.h"
 
 int is_first_run(void) {
@@ -165,4 +166,5 @@ void first_run(void) {
   }
 
   generate_vault_files(VAULT_PATH);
+  initPlayer(VAULT_PATH, USERNAME);
 }
