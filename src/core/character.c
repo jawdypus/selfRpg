@@ -19,6 +19,7 @@
 
 #include <linux/limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -30,15 +31,39 @@ const char *characters[] = {
 
 const int num_characters = sizeof(characters) / sizeof(characters[0]);
 
-void initPlayer(char *VAULT_PATH, char *HERO_NAME) {
+void initPlayer(char *VAULT_PATH) {
   Character player;
 
-  int playerClassInd = choose_class();
-  initCharacter(&player, playerClassInd, HERO_NAME);
+  set_hero_name(&player);
+  choose_class(&player);
+  init_character(&player);
   write_character_data(&player, VAULT_PATH);
 }
 
-int choose_class(void) {
+void set_hero_name(Character *character) {
+  char *DEFAULT_HERO_NAME, HERO_NAME[_SC_LOGIN_NAME_MAX];
+
+  DEFAULT_HERO_NAME = getlogin();
+
+  system("clear");
+  printf("Hello, Hero! What shall your name be?\n[default: %s] : ",
+         DEFAULT_HERO_NAME);
+  fgets(HERO_NAME, sizeof(HERO_NAME), stdin);
+
+  size_t len = strlen(DEFAULT_HERO_NAME);
+  if (len > 0 && HERO_NAME[len - 1] == '\n') {
+    HERO_NAME[len - 1] = '\0';
+    len--;
+  }
+
+  if (len == 0) {
+    strcpy(HERO_NAME, DEFAULT_HERO_NAME);
+  }
+
+  strncpy(character->name, HERO_NAME, _SC_LOGIN_NAME_MAX);
+}
+
+void choose_class(Character *character) {
   int index = 0;
   char input;
 
@@ -60,17 +85,14 @@ int choose_class(void) {
     }
   }
 
-  return index;
+  character->chClass = index;
 }
 
-void initCharacter(Character *character, CharacterClasses chClass,
-                   const char *name) {
-  character->chClass = chClass;
-  strncpy(character->name, name, _SC_LOGIN_NAME_MAX);
+void init_character(Character *character) {
   character->level = 1;
   character->experience = 0;
 
-  switch (chClass) {
+  switch (character->chClass) {
     case WARRIOR:
       character->hp = 15;
       character->strenght = 10;

@@ -105,35 +105,21 @@ void first_run(void) {
     return;
   }
 
-  char DEFAULT_PATH[PATH_MAX], DEFAULT_VAULT_NAME[_SC_LOGIN_NAME_MAX],
-      *DEFAULT_USERNAME;
-  char VAULT_PATH[PATH_MAX], USERNAME[_SC_LOGIN_NAME_MAX];
+  char *USERNAME, DEFAULT_VAULT_NAME[_SC_LOGIN_NAME_MAX],
+      DEFAULT_PATH[PATH_MAX], VAULT_PATH[PATH_MAX];
+  int len;
 
   memset(DEFAULT_VAULT_NAME, 0, _SC_LOGIN_NAME_MAX);
 
   // Setting the default username
-  DEFAULT_USERNAME = getlogin();
-  if (DEFAULT_USERNAME == NULL) {
+  USERNAME = getlogin();
+  if (USERNAME == NULL) {
     perror("getlogin failed");
-  }
-
-  printf("Enter your hero name [%s]: ", DEFAULT_USERNAME);
-  fgets(USERNAME, sizeof(USERNAME), stdin);
-
-  size_t len = strlen(USERNAME);
-  if (len > 0 && USERNAME[len - 1] == '\n') {
-    USERNAME[len - 1] = '\0';
-    len--;
-  }
-
-  if (len == 0) {
-    strcpy(USERNAME, DEFAULT_USERNAME);
   }
 
   // Setting the default path
 
   strcat(DEFAULT_VAULT_NAME, "/");
-  strcat(DEFAULT_VAULT_NAME, USERNAME);
   strcat(DEFAULT_VAULT_NAME, "Journey");
 
   getcwd(DEFAULT_PATH, sizeof(DEFAULT_PATH));
@@ -160,11 +146,10 @@ void first_run(void) {
     }
   }
 
-  // Save vault and name to the config
   if (init_config(USERNAME, VAULT_PATH)) {
     return;
   }
 
   generate_vault_files(VAULT_PATH);
-  initPlayer(VAULT_PATH, USERNAME);
+  initPlayer(VAULT_PATH);
 }

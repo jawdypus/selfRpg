@@ -36,10 +36,10 @@ typedef struct {
   int level;
 } Character;
 
-void initPlayer(char *VAULT_PATH, char *HERO_NAME);
-int choose_class(void);
-void initCharacter(Character *character, CharacterClasses chClass,
-                   const char *name);
+void initPlayer(char *VAULT_PATH);
+void set_hero_name(Character *character);
+void choose_class(Character *character);
+void init_character(Character *character);
 void write_character_data(Character *character, char *VAULT_PATH);
 
 #endif
