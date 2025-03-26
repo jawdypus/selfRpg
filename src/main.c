@@ -20,13 +20,14 @@
 
 #include "core/character.h"
 #include "core/config.h"
+#include "core/journal.h"
 #include "core/vault.h"
 #include "utils/helper.h"
 
 void read_args(int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
-    if ((strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--new") == 0) &&
-        i + 1 < argc) {
+    if (strcmp(argv[i], "-j") == 0 || strcmp(argv[i], "--journal")) {
+      create_today_journal(getActiveVaultPath());
     }
   }
 }
@@ -41,8 +42,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  printf("Active vault: %s\n", getActiveVaultName());
-  printf("Vault path: %s\n", getActiveVaultPath());
+  read_args(argc, argv);
 
   cleanupVault();
 
