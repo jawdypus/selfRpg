@@ -21,15 +21,48 @@
 #include "core/character.h"
 #include "core/config.h"
 #include "core/journal.h"
+#include "core/page.h"
 #include "core/vault.h"
 #include "utils/helper.h"
 
-void read_args(int argc, char *argv[]) {
+typedef struct {
+  int vault_flag;
+  int journal_flag;
+  int page_flag;
+  char *page_value;
+} Arguments;
+
+char *remove_quotes(char *str) {
+  int len = strlen(str);
+  if (len >= 2 && ((str[0] == '"' && str[len - 1] == '"') ||
+                   (str[0] == '\'' && str[len - 1] == '\''))) {
+    str[len - 1] = '\0';
+    return str + 1;
+  }
+
+  return str;
+}
+
+Arguments parse_arguments(int argc, char *argv[]) {
+  Arguments args = {0};  // Initialize all to zero/NULL
+
   for (int i = 1; i < argc; i++) {
-    if (strcmp(argv[i], "-j") == 0 || strcmp(argv[i], "--journal")) {
-      create_today_journal(getActiveVaultPath());
+    if (strcmp(argv[i], "--journal") == 0 || strcmp(argv[i], "-j") == 0) {
+      args.journal_flag = 1;
+    } else if (strcmp(argv[i], "--page") == 0 || strcmp(argv[i], "-p") == 0) {
+      if (i + 1 < argc) {
+        args.page_flag = 1;
+        args.page_value = remove_quotes(argv[i + 1]);
+        i++;
+      } else {
+        fprintf(
+            stderr,
+            "Error: Enter name of the page in quetes after the page flag\n");
+      }
     }
   }
+
+  return args;
 }
 
 int main(int argc, char *argv[]) {
@@ -37,12 +70,19 @@ int main(int argc, char *argv[]) {
     first_run();
   }
 
+  Arguments args = parse_arguments(argc, argv);
+
   if (!initVault(argc, argv)) {
     printf("Error: Failed to initialize vault manager\n");
     return 1;
   }
 
-  read_args(argc, argv);
+  if (args.journal_flag) {
+    create_today_journal(getActiveVaultPath());
+  }
+  if (args.page_flag) {
+    create_page(getActiveVaultPath(), args.page_value);
+  }
 
   cleanupVault();
 
