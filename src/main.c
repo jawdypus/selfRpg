@@ -22,6 +22,7 @@
 #include "core/config.h"
 #include "core/journal.h"
 #include "core/page.h"
+#include "core/todo.h"
 #include "core/vault.h"
 #include "utils/helper.h"
 
@@ -29,7 +30,9 @@ typedef struct {
   int vault_flag;
   int journal_flag;
   int page_flag;
+  int todo_flag;
   char *page_value;
+  char *todo_value;
 } Arguments;
 
 char *remove_quotes(char *str) {
@@ -59,6 +62,14 @@ Arguments parse_arguments(int argc, char *argv[]) {
             stderr,
             "Error: Enter name of the page in quetes after the page flag\n");
       }
+    } else if (strcmp(argv[i], "--todo") == 0 || strcmp(argv[i], "-t") == 0) {
+      if (i + 1 < argc) {
+        args.todo_flag = 1;
+        args.todo_value = remove_quotes(argv[i + 1]);
+        i++;
+      } else {
+        fprintf(stderr, "Error: Enter todo data\n");
+      }
     }
   }
 
@@ -82,6 +93,9 @@ int main(int argc, char *argv[]) {
   }
   if (args.page_flag) {
     create_page(getActiveVaultPath(), args.page_value);
+  }
+  if (args.todo_flag) {
+    add_todo(getActiveVaultPath(), args.todo_value);
   }
 
   cleanupVault();
